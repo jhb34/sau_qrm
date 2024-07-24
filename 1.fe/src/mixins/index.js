@@ -2,12 +2,19 @@ import axios from 'axios'
 import ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
 
-axios.defaults.baseURL = 'http://172.20.2.122:3000'
+const serverUrl = 'http://172.20.2.122:3000'
+
+axios.defaults.baseURL = serverUrl
 axios.defaults.headers['Content-Type'] = 'application/json;charset=utf-8'
 axios.defaults.headers['Access-Control-Allow-Origin'] = '*'
 axios.defaults.withCredentials = true
 
 export default {
+  data() {
+    return {
+      serverUrl: serverUrl
+    }
+  },
   methods: {
     async $get(url) {
       return (

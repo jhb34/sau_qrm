@@ -25,6 +25,34 @@ const routes = [
       import(/* webpackChunkName: "about" */ '../views/MainView.vue')
   },
   {
+    path: '/ncrlist',
+    name: 'ncrlist',
+    meta: { requiresAuth: true },
+    component: () =>
+      import(/* webpackChunkName: "about" */ '../views/NcrList.vue')
+  },
+  {
+    path: '/ncrnew',
+    name: 'ncrnew',
+    meta: { requiresAuth: true },
+    component: () =>
+      import(/* webpackChunkName: "about" */ '../views/NcrNew.vue')
+  },
+  {
+    path: '/ncredit',
+    name: 'ncredit',
+    meta: { requiresAuth: true },
+    component: () =>
+      import(/* webpackChunkName: "about" */ '../views/NcrEdit.vue')
+  },
+  {
+    path: '/defectlist',
+    name: 'defectlist',
+    meta: { requiresAuth: true },
+    component: () =>
+      import(/* webpackChunkName: "about" */ '../views/DefectList.vue')
+  },
+  {
     path: '/customerpo',
     name: 'customerpo',
     meta: { requiresAuth: true },

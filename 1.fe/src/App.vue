@@ -47,7 +47,7 @@ body {
   padding: 2rem 0;
 }
 
-@media (min-width: 992px) {
+@media (min-width: 1120px) {
   .window {
     grid-template-columns: auto 1fr;
   }
@@ -73,10 +73,9 @@ body {
 }
 table {
   border-collapse: collapse;
-  margin: 25px 0;
   font-size: 0.9em;
   font-family: sans-serif;
-  min-width: 400px;
+  min-width: 100%;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
 }
 table td,
@@ -96,8 +95,5 @@ table tbody td {
 }
 table tbody tr {
   background-color: #f9fafb;
-}
-table tbody tr:hover {
-  background-color: lightblue;
 }
 </style>

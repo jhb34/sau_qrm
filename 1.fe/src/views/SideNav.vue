@@ -13,7 +13,9 @@
       <button class="logout btn" @click="logout">Logout</button>
       <div class="big-links">
         <router-link class="link" to="/main">Main</router-link>
-        <router-link class="link" to="/production"
+        <router-link class="link" to="/ncrlist">NCR List</router-link>
+        <router-link class="link" to="/defectlist">사내외불량관리</router-link>
+        <!-- <router-link class="link" to="/production"
           >Production History</router-link
         >
         <router-link class="link" to="/customerpo"
@@ -25,7 +27,7 @@
         <router-link class="link" to="/daily">Daily Shipping Qty</router-link>
         <router-link class="link" to="/monthly"
           >Monthly Shipping Qty</router-link
-        >
+        > -->
       </div>
       <div class="modal">
         <div :class="['modal-overlay', { 'show-modal': isModalShow }]">
@@ -36,7 +38,11 @@
             <router-link class="link" @click="modalClose" to="/main"
               >Main</router-link
             >
-            <router-link class="link" @click="modalClose" to="/production"
+            <router-link class="link" to="/ncrlist">NCR List</router-link>
+            <router-link class="link" to="/defectlist"
+              >사내외불량관리</router-link
+            >
+            <!-- <router-link class="link" @click="modalClose" to="/production"
               >Production History</router-link
             >
             <router-link class="link" @click="modalClose" to="/customerpo"
@@ -50,7 +56,7 @@
             >
             <router-link class="link" @click="modalClose" to="/monthly"
               >Monthly Shipping Qty</router-link
-            >
+            > -->
           </div>
         </div>
       </div>
@@ -199,13 +205,12 @@ export default {
   line-height: 1.5;
   padding-left: 2rem;
 }
-@media (min-width: 992px) {
+@media (min-width: 1120px) {
   .icon {
     display: none;
   }
   .sidebar-container {
     min-height: 100vh;
-    height: 100%;
     width: 250px;
   }
   .content {

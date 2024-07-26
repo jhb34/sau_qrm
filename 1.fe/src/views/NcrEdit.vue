@@ -1,10 +1,10 @@
 <template>
   <div style="position: relative">
     <div class="fixed-header">
-      <h1>NCR Document 입력</h1>
+      <h1>NCR Document 수정</h1>
       <div>
         <button class="btns" style="margin-left: 2rem" @click="insertncr">
-          Save
+          Edit
         </button>
         <button class="btnc" style="margin-left: 2rem" @click="insertncr">
           Cancel
@@ -29,7 +29,13 @@
           </p>
           <p>
             <label for="ITMNO">품번</label>
-            <input type="text" v-model="ITMNO" id="ITMNO" />
+            <input
+              type="text"
+              v-model="ITMNO"
+              id="ITMNO"
+              @click="showModal = true"
+              autocomplete="off"
+            />
           </p>
           <p>
             <label for="LOT_NO">LOT No</label>
@@ -140,7 +146,7 @@
           </thead>
           <tbody>
             <tr>
-              <td style="text-align: center">임시대책</td>
+              <td style="text-align: center; font-weight: 900">임시대책</td>
               <td>
                 <input type="text" v-model="TMP_TX" style="width: 100%" />
               </td>
@@ -185,7 +191,7 @@
               </td>
             </tr>
             <tr>
-              <td style="text-align: center">개선대책</td>
+              <td style="text-align: center; font-weight: 900">개선대책</td>
               <td>
                 <input type="text" v-model="IMP_TX" style="width: 100%" />
               </td>
@@ -230,7 +236,7 @@
               </td>
             </tr>
             <tr>
-              <td style="text-align: center">유효성평가</td>
+              <td style="text-align: center; font-weight: 900">유효성평가</td>
               <td>
                 <input type="text" v-model="EFT_TX" style="width: 100%" />
               </td>
@@ -278,30 +284,26 @@
         </table>
       </div>
     </div>
+    <Modal
+      v-if="showModal"
+      @close="showModal = false"
+      @select="handleSelect"
+      :str="ITMNO"
+    />
   </div>
 </template>
 <script>
+import Modal from './ModalForm.vue'
 export default {
-  components: {},
+  components: { Modal: Modal },
   data() {
     return {
-      headers: [
-        { title: 'NCR No.', key: 'NCR_number' },
-        { title: '등록일자', key: 'REGI_YMD' },
-        { title: '발생일자', key: 'OCR_YMD' },
-        { title: '제목', key: 'NCR_TX' },
-        { title: '차종', key: 'CHJ_NM' },
-        { title: '품번', key: 'ITMNO' },
-        { title: '발생수량', key: 'OCR_QTY' },
-        { title: '귀책구분', key: 'REP_NM' },
-        { title: '라인/업체', key: 'WRK_CD' },
-        { title: '불량구분', key: 'ERR_NM' },
-        { title: '상태', key: 'NCR_ST' },
-        { title: '유효성판정결과', key: 'EFT_TX' }
-      ],
+      showModal: false,
+      input: '',
+      data: '',
       REGI_YMD: new Date().toISOString().slice(0, 10),
       OCR_YMD: new Date().toISOString().slice(0, 10),
-      NCR_NO: 2,
+      NCR_NO: 1,
       NCR_ST: '2',
       NCR_TX: '',
       ITMNO: '',
@@ -351,15 +353,18 @@ export default {
     }
   },
   setup() {},
-  created() {},
-  mounted() {
+  created() {
+    this.input = this.$route.query
     this.getERR1()
     this.getERR2()
     this.getERR3()
     this.getREP()
     this.getlines()
     this.getvendors()
+  },
+  mounted() {
     this.getJanuaryFirst()
+    this.getData()
   },
   unmounted() {},
   methods: {
@@ -369,7 +374,94 @@ export default {
       const januaryFirst = new Date(currentYear, 0, 1) // 올해의 1월 1일 생성
       this.dateValue1 = januaryFirst.toISOString().slice(0, 10)
     },
-
+    handleSelect(item) {
+      this.ITMNO = item
+    },
+    formatDate(dateString) {
+      // Ensure the input is a string
+      dateString = dateString.toString()
+      // Extract year, month, and day from the input string
+      const year = dateString.slice(0, 4)
+      const month = dateString.slice(4, 6)
+      const day = dateString.slice(6, 8)
+      // Construct the formatted date string
+      return `${year}-${month}-${day}`
+    },
+    async getncrno() {
+      const r = await this.$post('/api/ncr/getncrno', {
+        params: {
+          REGI_YMD: this.REGI_YMD.replace(/-/g, '')
+        }
+      })
+      console.log(r)
+      if (r === undefined) {
+        alert('Error at getData')
+        return
+      }
+      // console.log(r.data.recordset)
+      const aaa = r.data.recordset[0].max
+      console.log('aaa', aaa)
+      console.log(typeof aaa)
+      this.NCR_NO = aaa + 1
+    },
+    async getData() {
+      const r = await this.$post('/api/ncr/getdata', {
+        params: { REGI_YMD: this.input.REGI_YMD, NCR_NO: this.input.NCR_NO }
+      })
+      if (r === undefined) {
+        alert('Error at getData')
+        return
+      }
+      console.log('getData', r)
+      const data = r.data.recordset[0]
+      console.log(data)
+      // Object.assign(this, data)
+      this.REGI_YMD = this.formatDate(data.REGI_YMD)
+      this.NCR_NO = data.NCR_NO
+      this.NCR_ST = data.NCR_ST
+      this.NCR_TX = data.NCR_TX
+      this.OCR_YMD = this.formatDate(data.OCR_YMD)
+      this.ITMNO = data.ITMNO
+      this.LOT_NO = data.LOT_NO
+      this.OCR_QTY = data.OCR_QTY
+      this.LOT_QTY = data.LOT_QTY
+      this.ERR_CD1 = data.ERR_CD1.trim()
+      this.ERR_CD2 = data.ERR_CD2.trim()
+      this.ERR_4M = data.ERR_4M.trim()
+      this.ERR_END = data.ERR_END
+      this.REP_GB = data.REP_GB.trim()
+      this.WRK_CD = data.WRK_CD.trim()
+      if (
+        data.WRK_CD.startsWith('C') ||
+        data.WRK_CD.startsWith('F') ||
+        data.WRK_CD.startsWith('R')
+      ) {
+        await this.getruts()
+        this.RUT_CD = data.RUT_CD.trim()
+      }
+      this.OCR_TX = data.OCR_TX
+      this.upload.img1 = data.PIC_FILE1
+      this.upload.img2 = data.PIC_FILE2
+      this.TMP_ST = data.TMP_ST
+      this.TMP_YMD = data.TMP_YMD
+      this.TMP_TX = data.TMP_TX
+      this.upload.file1 = data.TMP_FILE
+      this.IMP_ST = data.IMP_ST
+      this.IMP_YMD = data.IMP_YMD
+      this.IMP_TX = data.IMP_TX
+      this.upload.file2 = data.IMP_FILE
+      this.EFT_ST = data.EFT_ST
+      this.EFT_YMD = data.EFT_YMD
+      this.EFT_TX = data.EFT_TX
+      this.upload.file3 = data.EFT_FILE
+      this.MSR_ST = data.MSR_ST
+      this.FMEA_FL = data.FMEA_FL
+      this.DMG_TAG = data.DMG_TAG
+      this.FMEA_TAG = data.FMEA_TAG
+      this.CST_CD = data.CST_CD
+      this.AJIKJ = data.AJIKJ
+      // {this.REGI_YMD.replace(/-/g, ''),this.NCR_NO,this.NCR_ST,this.NCR_TX,this.OCR_YMD.replace(/-/g, ''),this.ITMNO,this.LOT_NO,this.OCR_QTY,this.LOT_QTY,this.ERR_CD1,this.ERR_CD2,this.ERR_4M,this.ERR_END,this.REP_GB,this.WRK_CD,this.RUT_CD,this.OCR_TX,this.upload.img1,this.upload.img2,this.TMP_ST,this.TMP_YMD,this.TMP_TX,this.upload.file1,this.IMP_ST,this.IMP_YMD,this.IMP_TX,this.upload.file2,this.EFT_ST,this.EFT_YMD,this.EFT_TX,this.upload.file3,this.MSR_ST,this.FMEA_FL,this.DMG_TAG,this.FMEA_TAG,this.CST_CD,this.AJIKJ } = data
+    },
     async getREP() {
       const r = await this.$get('/api/ncr/getREP')
       this.REP_GBs = r.recordset
@@ -428,6 +520,7 @@ export default {
       this.data = r.data.recordset
     },
     async insertncr() {
+      await this.getncrno()
       const r = await this.$post('/api/ncr/insertncr', {
         params: {
           REGI_YMD: this.REGI_YMD.replace(/-/g, ''),
@@ -507,7 +600,7 @@ export default {
   background-color: #fff;
   padding: 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 1000; /* 다른 요소 위에 표시되도록 설정 */
+  z-index: 5; /* 다른 요소 위에 표시되도록 설정 */
   display: flex;
   justify-content: space-between;
   align-items: center;

@@ -29,7 +29,13 @@
           </p>
           <p>
             <label for="ITMNO">품번</label>
-            <input type="text" v-model="ITMNO" id="ITMNO" />
+            <input
+              type="text"
+              v-model="ITMNO"
+              id="ITMNO"
+              @click="showModal = true"
+              autocomplete="off"
+            />
           </p>
           <p>
             <label for="LOT_NO">LOT No</label>
@@ -140,7 +146,7 @@
           </thead>
           <tbody>
             <tr>
-              <td style="text-align: center">임시대책</td>
+              <td style="text-align: center; font-weight: 900">임시대책</td>
               <td>
                 <input type="text" v-model="TMP_TX" style="width: 100%" />
               </td>
@@ -185,7 +191,7 @@
               </td>
             </tr>
             <tr>
-              <td style="text-align: center">개선대책</td>
+              <td style="text-align: center; font-weight: 900">개선대책</td>
               <td>
                 <input type="text" v-model="IMP_TX" style="width: 100%" />
               </td>
@@ -230,7 +236,7 @@
               </td>
             </tr>
             <tr>
-              <td style="text-align: center">유효성평가</td>
+              <td style="text-align: center; font-weight: 900">유효성평가</td>
               <td>
                 <input type="text" v-model="EFT_TX" style="width: 100%" />
               </td>
@@ -278,13 +284,21 @@
         </table>
       </div>
     </div>
+    <Modal
+      v-if="showModal"
+      @close="showModal = false"
+      @select="handleSelect"
+      :str="ITMNO"
+    />
   </div>
 </template>
 <script>
+import Modal from './ModalForm.vue'
 export default {
-  components: {},
+  components: { Modal: Modal },
   data() {
     return {
+      showModal: false,
       headers: [
         { title: 'NCR No.', key: 'NCR_number' },
         { title: '등록일자', key: 'REGI_YMD' },
@@ -301,12 +315,12 @@ export default {
       ],
       REGI_YMD: new Date().toISOString().slice(0, 10),
       OCR_YMD: new Date().toISOString().slice(0, 10),
-      NCR_NO: 2,
-      NCR_ST: '2',
+      NCR_NO: 1,
+      NCR_ST: '',
       NCR_TX: '',
       ITMNO: '',
       LOT_NO: '',
-      OCR_QTY: '',
+      OCR_QTY: 0,
       LOT_QTY: 0,
       ERR_CD1: 'A01',
       ERR_CD1s: '',
@@ -369,13 +383,33 @@ export default {
       const januaryFirst = new Date(currentYear, 0, 1) // 올해의 1월 1일 생성
       this.dateValue1 = januaryFirst.toISOString().slice(0, 10)
     },
-
+    handleSelect(item) {
+      this.ITMNO = item
+    },
+    async getncrno() {
+      const r = await this.$post('/api/ncr/getncrno', {
+        params: {
+          REGI_YMD: this.REGI_YMD.replace(/-/g, '')
+        }
+      })
+      console.log(r)
+      if (r === undefined) {
+        alert('Error at getData')
+        return
+      }
+      // console.log(r.data.recordset)
+      const aaa = r.data.recordset[0].max
+      console.log('aaa', aaa)
+      console.log(typeof aaa)
+      this.NCR_NO = aaa + 1
+    },
     async getREP() {
       const r = await this.$get('/api/ncr/getREP')
       this.REP_GBs = r.recordset
     },
     async getlines() {
       const r = await this.$get('/api/ncr/getlines')
+      console.log('lines', r)
       this.lines = r.recordset
     },
     async getruts() {
@@ -397,11 +431,13 @@ export default {
     // 불량구분
     async getERR1() {
       const r = await this.$get('/api/ncr/getERR1')
+      console.log('err1', r)
       this.ERR_CD1s = r.recordset
     },
     // 불량현상
     async getERR2() {
       const r = await this.$get('/api/ncr/getERR2')
+      console.log('err2', r)
       this.ERR_CD2s = r.recordset
     },
     // 4M
@@ -428,45 +464,46 @@ export default {
       this.data = r.data.recordset
     },
     async insertncr() {
+      await this.getncrno()
       const r = await this.$post('/api/ncr/insertncr', {
         params: {
-          REGI_YMD: this.REGI_YMD.replace(/-/g, ''),
+          REGI_YMD: this.REGI_YMD.replace(/-/g, '').trim(),
           NCR_NO: this.NCR_NO,
-          NCR_ST: this.NCR_ST,
-          NCR_TX: this.NCR_TX,
-          OCR_YMD: this.OCR_YMD.replace(/-/g, ''),
-          ITMNO: this.ITMNO,
-          LOT_NO: this.LOT_NO,
+          NCR_ST: this.NCR_ST.trim(),
+          NCR_TX: this.NCR_TX.trim(),
+          OCR_YMD: this.OCR_YMD.replace(/-/g, '').trim(),
+          ITMNO: this.ITMNO.trim(),
+          LOT_NO: this.LOT_NO.trim(),
           OCR_QTY: this.OCR_QTY,
           LOT_QTY: this.LOT_QTY,
-          ERR_CD1: this.ERR_CD1,
-          ERR_CD2: this.ERR_CD2,
-          ERR_4M: this.ERR_4M,
-          ERR_END: this.ERR_END,
-          REP_GB: this.REP_GB,
-          WRK_CD: this.WRK_CD,
-          RUT_CD: this.RUT_CD,
-          OCR_TX: this.OCR_TX,
-          PIC_FILE1: this.upload.img1,
-          PIC_FILE2: this.upload.img2,
-          TMP_ST: this.TMP_ST,
-          TMP_YMD: this.TMP_YMD,
-          TMP_TX: this.TMP_TX,
-          TMP_FILE: this.upload.file1,
-          IMP_ST: this.IMP_ST,
-          IMP_YMD: this.IMP_YMD,
-          IMP_TX: this.IMP_TX,
-          IMP_FILE: this.upload.file2,
-          EFT_ST: this.EFT_ST,
-          EFT_YMD: this.EFT_YMD,
-          EFT_TX: this.EFT_TX,
-          EFT_FILE: this.upload.file3,
-          MSR_ST: this.MSR_ST,
-          FMEA_FL: this.FMEA_FL,
-          DMG_TAG: this.DMG_TAG,
-          FMEA_TAG: this.FMEA_TAG,
-          CST_CD: this.CST_CD,
-          AJIKJ: this.AJIKJ
+          ERR_CD1: this.ERR_CD1.trim(),
+          ERR_CD2: this.ERR_CD2.trim(),
+          ERR_4M: this.ERR_4M.trim(),
+          ERR_END: this.ERR_END.trim(),
+          REP_GB: this.REP_GB.trim(),
+          WRK_CD: this.WRK_CD.trim(),
+          RUT_CD: this.RUT_CD.trim(),
+          OCR_TX: this.OCR_TX.trim(),
+          PIC_FILE1: this.upload.img1.trim(),
+          PIC_FILE2: this.upload.img2.trim(),
+          TMP_ST: this.TMP_ST.trim(),
+          TMP_YMD: this.TMP_YMD.trim(),
+          TMP_TX: this.TMP_TX.trim(),
+          TMP_FILE: this.upload.file1.trim(),
+          IMP_ST: this.IMP_ST.trim(),
+          IMP_YMD: this.IMP_YMD.trim(),
+          IMP_TX: this.IMP_TX.trim(),
+          IMP_FILE: this.upload.file2.trim(),
+          EFT_ST: this.EFT_ST.trim(),
+          EFT_YMD: this.EFT_YMD.trim(),
+          EFT_TX: this.EFT_TX.trim(),
+          EFT_FILE: this.upload.file3.trim(),
+          MSR_ST: this.MSR_ST.trim(),
+          FMEA_FL: this.FMEA_FL.trim(),
+          DMG_TAG: this.DMG_TAG.trim(),
+          FMEA_TAG: this.FMEA_TAG.trim(),
+          CST_CD: this.CST_CD.trim(),
+          AJIKJ: this.AJIKJ.trim()
         }
       })
       console.log(r)
@@ -507,7 +544,7 @@ export default {
   background-color: #fff;
   padding: 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 1000; /* 다른 요소 위에 표시되도록 설정 */
+  z-index: 1; /* 다른 요소 위에 표시되도록 설정 */
   display: flex;
   justify-content: space-between;
   align-items: center;

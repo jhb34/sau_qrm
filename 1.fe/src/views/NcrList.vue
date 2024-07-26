@@ -66,7 +66,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="a in data" :key="a">
+        <tr v-for="a in data" :key="a" @click="goToScan(a.NCR_number)">
           <td v-for="c in headers" :key="c">{{ a[c.key] }}</td>
         </tr>
       </tbody>
@@ -121,6 +121,16 @@ export default {
       const januaryFirst = new Date(currentYear, 0, 1) // 올해의 1월 1일 생성
       this.dateValue1 = januaryFirst.toISOString().slice(0, 10)
     },
+    goToScan(a) {
+      const input = a
+      const parts = input.split('-')
+      const datePart = parts[0]
+      const numberPart = parts[1]
+      this.$router.push({
+        path: '/ncredit',
+        query: { REGI_YMD: datePart, NCR_NO: numberPart }
+      })
+    },
 
     async getREP() {
       const r = await this.$get('/api/ncr/getREP')
@@ -164,9 +174,15 @@ export default {
     },
     goToNcrForm() {
       this.$router.push({
-        path: '/ncrform'
+        path: '/ncrnew'
       })
     }
   }
 }
 </script>
+<style scoped>
+table tbody tr:hover {
+  background-color: lightblue;
+  cursor: pointer;
+}
+</style>

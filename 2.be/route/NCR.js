@@ -2,6 +2,23 @@ const express = require('express');
 const router = express.Router();
 const sql = require('mssql');
 
+router.post('/getncrno', (req, res) => {
+  const { params } = req.body;
+  console.log(params);
+  const REGI_YMD = params.REGI_YMD;
+  const request = new sql.Request();
+  request.query(
+    `select isnull(max(ncr_no),0) max from QCM_NCRMST where regi_ymd='${REGI_YMD}'`,
+    (err, result) => {
+      if (err) {
+        console.log(err);
+        res.sendStatus(500);
+        return;
+      }
+      res.send(result);
+    }
+  );
+});
 router.get('/getREP', (req, res) => {
   const request = new sql.Request();
   request.query(
@@ -19,7 +36,7 @@ router.get('/getREP', (req, res) => {
 router.get('/getlines', (req, res) => {
   const request = new sql.Request();
   request.query(
-    "select A.WRK_CD from  BAS_WRKCTPF A WHERE A.ACT_GB = 'A' order by A.WRK_CD",
+    "select rtrim(WRK_CD) WRK_CD from  BAS_WRKCTPF  WHERE ACT_GB = 'A' order by WRK_CD",
     (err, result) => {
       if (err) {
         console.log(err);
@@ -35,7 +52,7 @@ router.post('/getruts', (req, res) => {
   const WRK_CD = params.WRK_CD.trim();
   const request = new sql.Request();
   request.query(
-    `select RUT_CD from  BAS_RUTMST WHERE ACT_GB = 'A' and WRK_CD='${WRK_CD}' order by RUT_NO`,
+    `select rtrim(RUT_CD) RUT_CD from  BAS_RUTMST WHERE ACT_GB = 'A' and WRK_CD='${WRK_CD}' order by RUT_NO`,
     (err, result) => {
       if (err) {
         console.log(err);
@@ -133,6 +150,27 @@ router.post('/getncrlists', (req, res) => {
     }
   );
 });
+
+router.post('/getdata', (req, res) => {
+  const { params } = req.body;
+  console.log(params);
+  const REGI_YMD = params.REGI_YMD;
+  const NCR_NO = params.NCR_NO;
+  const request = new sql.Request();
+  request.query(
+    `select TOP 100 * from QCM_NCRMST where REGI_YMD=${REGI_YMD} and NCR_NO='${NCR_NO}'
+        `,
+    (err, result) => {
+      if (err) {
+        console.log(err);
+        res.sendStatus(500);
+        return;
+      }
+      res.send(result);
+    }
+  );
+});
+
 router.post('/insertncr', (req, res) => {
   const { params } = req.body;
   console.log(params);

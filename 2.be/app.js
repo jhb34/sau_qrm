@@ -91,6 +91,9 @@ app.use('/api/defect', defectRoute);
 const fileRoute = require('./route/file');
 app.use('/api/upload', fileRoute);
 
+const modalRoute = require('./route/Modal');
+app.use('/api/modal', modalRoute);
+
 app.listen(3000, function () {
   console.log('listening on 3000');
 });

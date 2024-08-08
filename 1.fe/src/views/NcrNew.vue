@@ -1,12 +1,16 @@
 <template>
   <div style="position: relative">
     <div class="fixed-header">
-      <h1>NCR Document 입력</h1>
+      <h1>NCR Document (New)</h1>
+      <div>
+        <label>작성자</label>
+        <input type="text" v-model="user" disabled />
+      </div>
       <div>
         <button class="btns" style="margin-left: 2rem" @click="insertncr">
           Save
         </button>
-        <button class="btnc" style="margin-left: 2rem" @click="insertncr">
+        <button class="btnc" style="margin-left: 2rem" @click="goToNcrList">
           Cancel
         </button>
       </div>
@@ -23,6 +27,41 @@
             <label for="OCR_YMD">발생일자</label>
             <input type="date" v-model="OCR_YMD" id="OCR_YMD" />
           </p>
+          <div style="display: flex">
+            <p>
+              <label for="OCR_PLC">발생장소</label>
+              <select id="OCR_PLC" v-model="OCR_PLC">
+                <option value="A">-Select-</option>
+                <option value="B">사내 (라인)</option>
+                <option value="C">이동</option>
+                <option value="D">고객</option>
+              </select>
+            </p>
+            <p v-if="['B'].includes(OCR_PLC)">
+              <label for="OCR_LINE">라인</label>
+              <select id="OCR_LINE" v-model="WRK_CD" @change="getruts">
+                <option v-for="a in lines" :key="a" :value="a.WRK_CD">
+                  {{ a.WRK_CD }}
+                </option>
+              </select>
+            </p>
+            <p v-if="['C'].includes(OCR_PLC)">
+              <label for="OCR_SHIP">이동</label>
+              <select id="OCR_SHIP" v-model="WRK_CD" @change="getruts">
+                <option v-for="a in shippings" :key="a" :value="a.ASGUB">
+                  {{ a.ASDES }}
+                </option>
+              </select>
+            </p>
+            <p v-if="['D'].includes(OCR_PLC)">
+              <label for="OCR_CUSTOMER">고객</label>
+              <select id="OCR_CUSTOMER" v-model="WRK_CD">
+                <option v-for="a in customers" :key="a" :value="a.ASGUB">
+                  {{ a.ASDES }}
+                </option>
+              </select>
+            </p>
+          </div>
           <p>
             <label for="NCR_TX">제목</label>
             <input type="text" v-model="NCR_TX" id="NCR_TX" />
@@ -41,7 +80,42 @@
             <label for="LOT_NO">LOT No</label>
             <input type="text" v-model="LOT_NO" id="LOT_NO" />
           </p>
-          <p>
+          <div style="display: flex">
+            <p>
+              <label for="REP_GB">귀책</label>
+              <select id="REP_GB" v-model="REP">
+                <option value="A">-Select-</option>
+                <option value="B">사내 (부서)</option>
+                <option value="C">업체</option>
+                <option value="D">고객</option>
+              </select>
+            </p>
+            <p v-if="['B'].includes(REP)">
+              <label for="REP_TEAM">부서</label>
+              <select id="REP_TEAM" v-model="REP_GB">
+                <option v-for="a in teams" :key="a" :value="a.ASGUB">
+                  {{ a.ASDES }}
+                </option>
+              </select>
+            </p>
+            <p v-if="['C'].includes(REP)">
+              <label for="REP_VENDOR">업체</label>
+              <select id="REP_VENDOR" v-model="REP_GB">
+                <option v-for="a in vendors" :key="a" :value="a.CST_CD">
+                  {{ a.CST_NM }}
+                </option>
+              </select>
+            </p>
+            <p v-if="['D'].includes(REP)">
+              <label for="REP_CUSTOMER">고객</label>
+              <select id="REP_CUSTOMER" v-model="REP_GB">
+                <option v-for="a in customers" :key="a" :value="a.ASGUB">
+                  {{ a.ASDES }}
+                </option>
+              </select>
+            </p>
+          </div>
+          <!-- <p>
             <label for="REP_GB">귀책구분</label>
             <select id="REP_GB" v-model="REP_GB">
               <option v-for="a in REP_GBs" :key="a" :value="a.ASGUB">
@@ -72,7 +146,7 @@
                 {{ a.CST_NM }}
               </option>
             </select>
-          </p>
+          </p> -->
         </div>
         <div class="category">
           <p>
@@ -115,21 +189,71 @@
       <div></div>
       <div class="images">
         <div class="img-box">
-          <span>사진 1</span>
-          <input
-            type="file"
-            accept="image/png, image/jpeg"
-            @change="uploadImage($event.target.files, 1)"
-          />
+          <div class="img-tag">
+            <span>사진 1</span>
+            <button
+              @click="$refs.img1.click()"
+              style="font-weight: 600; cursor: pointer"
+            >
+              {{ upload.img1 === '' ? 'Upload Image' : 'Change Image' }}
+            </button>
+            <button
+              v-if="upload.img1 !== ''"
+              @click="deleteIMG1"
+              style="
+                width: 1.2rem;
+                height: 1.2rem;
+                cursor: pointer;
+                padding: 0;
+                background-color: red;
+                color: white;
+                margin-left: 0.5rem;
+              "
+            >
+              X
+            </button>
+            <input
+              type="file"
+              accept="image/png, image/jpeg"
+              @change="uploadImage($event.target.files, 1)"
+              ref="img1"
+              style="display: none"
+            />
+          </div>
           <img :src="imgSrc" alt="" />
         </div>
         <div class="img-box">
-          <span>사진 2</span>
-          <input
-            type="file"
-            accept="image/png, image/jpeg"
-            @change="uploadImage($event.target.files, 2)"
-          />
+          <div class="img-tag">
+            <span>사진 2</span>
+            <button
+              @click="$refs.img2.click()"
+              style="font-weight: 600; cursor: pointer"
+            >
+              {{ upload.img2 === '' ? 'Upload Image' : 'Change Image' }}
+            </button>
+            <button
+              v-if="upload.img2 !== ''"
+              @click="deleteIMG2"
+              style="
+                width: 1.2rem;
+                height: 1.2rem;
+                cursor: pointer;
+                padding: 0;
+                background-color: red;
+                color: white;
+                margin-left: 0.5rem;
+              "
+            >
+              X
+            </button>
+            <input
+              type="file"
+              accept="image/png, image/jpeg"
+              @change="uploadImage($event.target.files, 2)"
+              ref="img2"
+              style="display: none"
+            />
+          </div>
           <img :src="imgSrc2" alt="" />
         </div>
       </div>
@@ -150,14 +274,49 @@
               <td>
                 <input type="text" v-model="TMP_TX" style="width: 100%" />
               </td>
-              <td>
+              <td style="text-align: center">
+                <a
+                  v-if="upload.file1 !== ''"
+                  :href="`${serverUrl}/uploads/${upload.file1}`"
+                  style="
+                    font-weight: 600;
+                    cursor: pointer;
+                    color: white;
+                    background: #007bff;
+                    padding: 0.5rem;
+                  "
+                >
+                  Download
+                </a>
+                <button
+                  @click="$refs.file1.click()"
+                  style="font-weight: 600; cursor: pointer; margin-left: 1rem"
+                >
+                  {{ upload.file1 === '' ? 'Upload' : 'Change' }}
+                </button>
+                <button
+                  v-if="upload.file1 !== ''"
+                  @click="upload.file1 = ''"
+                  style="
+                    width: 1.2rem;
+                    height: 1.2rem;
+                    cursor: pointer;
+                    padding: 0;
+                    background-color: red;
+                    color: white;
+                    margin-left: 0.5rem;
+                  "
+                >
+                  X
+                </button>
                 <input
                   type="file"
                   @change="uploadFile($event.target.files, 1)"
-                  style="width: 100%"
+                  ref="file1"
+                  style="display: none"
                 />
               </td>
-              <td style="text-align: center">
+              <td style="text-align: center" :style="getTdStyle(TMP_ST)">
                 <div class="border">
                   <input
                     type="radio"
@@ -195,14 +354,49 @@
               <td>
                 <input type="text" v-model="IMP_TX" style="width: 100%" />
               </td>
-              <td>
+              <td style="text-align: center">
+                <a
+                  v-if="upload.file2 !== ''"
+                  :href="`${serverUrl}/uploads/${upload.file2}`"
+                  style="
+                    font-weight: 600;
+                    cursor: pointer;
+                    color: white;
+                    background: #007bff;
+                    padding: 0.5rem;
+                  "
+                >
+                  Download
+                </a>
+                <button
+                  @click="$refs.file2.click()"
+                  style="font-weight: 600; cursor: pointer; margin-left: 1rem"
+                >
+                  {{ upload.file2 === '' ? 'Upload' : 'Change' }}
+                </button>
+                <button
+                  v-if="upload.file2 !== ''"
+                  @click="upload.file2 = ''"
+                  style="
+                    width: 1.2rem;
+                    height: 1.2rem;
+                    cursor: pointer;
+                    padding: 0;
+                    background-color: red;
+                    color: white;
+                    margin-left: 0.5rem;
+                  "
+                >
+                  X
+                </button>
                 <input
                   type="file"
                   @change="uploadFile($event.target.files, 2)"
-                  style="width: 100%"
+                  ref="file2"
+                  style="display: none"
                 />
               </td>
-              <td style="text-align: center">
+              <td style="text-align: center" :style="getTdStyle(IMP_ST)">
                 <div class="border">
                   <input
                     type="radio"
@@ -240,14 +434,49 @@
               <td>
                 <input type="text" v-model="EFT_TX" style="width: 100%" />
               </td>
-              <td>
+              <td style="text-align: center">
+                <a
+                  v-if="upload.file3 !== ''"
+                  :href="`${serverUrl}/uploads/${upload.file3}`"
+                  style="
+                    font-weight: 600;
+                    cursor: pointer;
+                    color: white;
+                    background: #007bff;
+                    padding: 0.5rem;
+                  "
+                >
+                  Download
+                </a>
+                <button
+                  @click="$refs.file3.click()"
+                  style="font-weight: 600; cursor: pointer; margin-left: 1rem"
+                >
+                  {{ upload.file3 === '' ? 'Upload' : 'Change' }}
+                </button>
+                <button
+                  v-if="upload.file3 !== ''"
+                  @click="upload.file3 = ''"
+                  style="
+                    width: 1.2rem;
+                    height: 1.2rem;
+                    cursor: pointer;
+                    padding: 0;
+                    background-color: red;
+                    color: white;
+                    margin-left: 0.5rem;
+                  "
+                >
+                  X
+                </button>
                 <input
                   type="file"
                   @change="uploadFile($event.target.files, 3)"
-                  style="width: 100%"
+                  ref="file3"
+                  style="display: none"
                 />
               </td>
-              <td style="text-align: center">
+              <td style="text-align: center" :style="getTdStyle(EFT_ST)">
                 <div class="border">
                   <input
                     type="radio"
@@ -315,11 +544,15 @@ export default {
       ],
       REGI_YMD: new Date().toISOString().slice(0, 10),
       OCR_YMD: new Date().toISOString().slice(0, 10),
+      OCR_PLC: 'A',
       NCR_NO: 1,
       NCR_ST: '',
       NCR_TX: '',
       ITMNO: '',
       LOT_NO: '',
+      customers: '',
+      teams: '',
+      shippings: '',
       OCR_QTY: 0,
       LOT_QTY: 0,
       ERR_CD1: 'A01',
@@ -329,6 +562,7 @@ export default {
       ERR_4M: 'A',
       ERR_4Ms: '',
       ERR_END: '',
+      REP: 'A',
       REP_GB: '',
       REP_GBs: '',
       WRK_CD: '',
@@ -364,6 +598,11 @@ export default {
       }
     }
   },
+  computed: {
+    user() {
+      return this.$store.state.user
+    }
+  },
   setup() {},
   created() {},
   mounted() {
@@ -373,6 +612,9 @@ export default {
     this.getREP()
     this.getlines()
     this.getvendors()
+    this.getteams()
+    this.getshippings()
+    this.getcustomers()
     this.getJanuaryFirst()
   },
   unmounted() {},
@@ -383,8 +625,29 @@ export default {
       const januaryFirst = new Date(currentYear, 0, 1) // 올해의 1월 1일 생성
       this.dateValue1 = januaryFirst.toISOString().slice(0, 10)
     },
+    goToNcrList() {
+      this.$router.push({
+        path: '/ncrlist'
+      })
+    },
     handleSelect(item) {
       this.ITMNO = item
+    },
+    deleteIMG1() {
+      this.upload.img1 = ''
+      this.imgSrc = ''
+    },
+    deleteIMG2() {
+      this.upload.img2 = ''
+      this.imgSrc2 = ''
+    },
+    getTdStyle(value) {
+      switch (value) {
+        case '1':
+          return { backgroundColor: '#f3d414' }
+        case '9':
+          return { backgroundColor: '#9acf14' }
+      }
     },
     async getncrno() {
       const r = await this.$post('/api/ncr/getncrno', {
@@ -428,6 +691,18 @@ export default {
       const r = await this.$get('/api/ncr/getvendors')
       this.vendors = r.recordset
     },
+    async getcustomers() {
+      const r = await this.$get('/api/ncr/getcustomers')
+      this.customers = r.recordset
+    },
+    async getteams() {
+      const r = await this.$get('/api/ncr/getteams')
+      this.teams = r.recordset
+    },
+    async getshippings() {
+      const r = await this.$get('/api/ncr/getshippings')
+      this.shippings = r.recordset
+    },
     // 불량구분
     async getERR1() {
       const r = await this.$get('/api/ncr/getERR1')
@@ -465,6 +740,19 @@ export default {
     },
     async insertncr() {
       await this.getncrno()
+      if (this.NCR_TX === '') {
+        alert('Fill Title')
+        return
+      }
+      if (this.ITMNO === '') {
+        alert('Fill Item Number')
+        return
+      }
+      if (this.OCR_QTY < 1) {
+        alert('Fill defect Qty')
+        return
+      }
+
       const r = await this.$post('/api/ncr/insertncr', {
         params: {
           REGI_YMD: this.REGI_YMD.replace(/-/g, '').trim(),
@@ -507,6 +795,13 @@ export default {
         }
       })
       console.log(r)
+      if (r.status === 200) {
+        alert('Saved successfully')
+        this.goToNcrList()
+      } else {
+        alert('An error occurred. Please contact the IT team')
+        this.goToNcrList()
+      }
     },
     excelExport() {
       if (this.data === '') {
@@ -516,22 +811,32 @@ export default {
     },
     async uploadImage(files, type) {
       console.log('files', files)
+      console.log('files0', files[0])
+      console.log('files1', files.length)
       const r = await this.$upload('/api/upload/image', files[0])
       console.log('response', r)
       console.log('serverurl', this.serverUrl)
       if (type === 1) {
         this.imgSrc = `
-      ${this.serverUrl}/images/${r.data.filename}`
+        ${this.serverUrl}/images/${r.data.filename}`
       } else {
         this.imgSrc2 = `${this.serverUrl}/images/${r.data.filename}`
       }
-      this.upload[`img${type}`] = r.data.filename
+      if (files.length === 0) {
+        this.upload[`img${type}`] = ''
+      } else {
+        this.upload[`img${type}`] = r.data.filename
+      }
     },
     async uploadFile(files, type) {
       console.log('files', files)
       const r = await this.$upload('/api/upload/file', files[0])
       console.log('response', r)
-      this.upload[`file${type}`] = r.data.filename
+      if (files.length === 0) {
+        this.upload[`file${type}`] = ''
+      } else {
+        this.upload[`file${type}`] = r.data.filename
+      }
     }
   }
 }
@@ -664,6 +969,8 @@ img {
   width: 100%;
   max-height: 600px;
   object-fit: contain;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 span {
   margin-right: 0.4rem;
@@ -680,6 +987,11 @@ span {
 .border {
   display: inline;
   padding: 0.5rem;
+}
+.img-tag {
+  display: flex;
+  margin-bottom: 0.3rem;
+  align-items: center;
 }
 @media (min-width: 1120px) {
   .images,
